@@ -94,10 +94,23 @@ def main() -> None:
     scope = "user-library-read"
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 
-    album_name = input("Enter an album name: ")
-    album_links = get_album(sp, album_name)
-    for album_link in album_links:
-        print(album_link)
+    print("Welcome to Symphony!")
+    print("1) Home")
+    print("2) Search")
+    option = int(input("Select an option to use: "))
+
+    if option == 2:
+        song_query = input("Enter a song name: ")
+        tracks = get_tracks(sp, query=song_query)
+        index = 1
+        for name, artists in zip(tracks["names"], tracks["artists"]):
+            print(f"{index} - {name} by {artists}")
+            index += 1
+        index_input = int(input("Enter index that you want to play: "))
+        index_input -= 1
+        playback(
+            query=f'{tracks["names"][index_input]} - {tracks["artists"][index_input]}'
+        )
 
 
 if __name__ == "__main__":
