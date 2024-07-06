@@ -27,6 +27,17 @@ def get_album(sp, album_name: str) -> list[Any]:
         album_links.append(item["external_urls"]["spotify"])
     return album_links
 
+def get_artists(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
+    names = []
+    links = []
+    results: Any = sp.search(query, type="artist")
+
+    for items in results["artists"]["items"]:
+        names.append(items["name"])
+        links.append(items["external_urls"]["spotify"])
+
+    return {"names": names, "links": links}
+
 
 def main() -> None:
     load_dotenv()
