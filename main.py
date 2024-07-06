@@ -56,36 +56,29 @@ def playback(query: str) -> str | None:
     response = requests.get(url, params={"query": query}).json()
     for results in response["data"]["results"]:
         links.append(results["url"])
-        explicit_content.append(results["explicitContent"])
-    song = {"links": links, "explicitContent": explicit_content}
-    print(song)
+        explicit_content.append(results["explicit_content"])
+    song = {"links": links, "explicit_content": explicit_content}
 
-    explicit = True
-    for index, explicit_content in enumerate(song["explicitContent"]):
-        if explicit_content == explicit:
+    explicit_status = True
+    for index, explicit_content in enumerate(song["explicit_content"]):
+        if explicit_content == explicit_status:
             song_link = song["links"][index]
             break
         elif song_link == "":
             song_link = song["links"][index]
 
-    print(song_link)
     player = mpv.MPV(ytdl=True)
     player.play(song_link)
 
-    # Define the function to handle key presses
     def on_press(key):
         try:
-            # Check if the space bar is pressed
             if key == keyboard.Key.space:
                 player.pause = not player.pause
         except AttributeError:
             pass
 
-    # Set up the key listener
     listener = keyboard.Listener(on_press=on_press)
     listener.start()
-
-    # Keep the script running
     listener.join()
 
 
