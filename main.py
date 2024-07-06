@@ -1,7 +1,10 @@
 from typing import Any
 
+import mpv
+import requests
 import spotipy
 from dotenv import load_dotenv
+from pynput import keyboard
 from spotipy.oauth2 import SpotifyOAuth
 
 
@@ -42,6 +45,48 @@ def get_album(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
         links.append(items["external_urls"]["spotify"])
 
     return {"names": names, "links": links}
+
+
+def playback(query: str) -> str | None:
+    song_link = ""
+    links = []
+    explicit_content = []
+    url = "https://saavn.dev/api/search/songs"
+
+    response = requests.get(url, params={"query": query}).json()
+    for results in response["data"]["results"]:
+        links.append(results["url"])
+        explicit_content.append(results["explicitContent"])
+    song = {"links": links, "explicitContent": explicit_content}
+    print(song)
+
+    explicit = True
+    for index, explicit_content in enumerate(song["explicitContent"]):
+        if explicit_content == explicit:
+            song_link = song["links"][index]
+            break
+        elif song_link == "":
+            song_link = song["links"][index]
+
+    print(song_link)
+    player = mpv.MPV(ytdl=True)
+    player.play(song_link)
+
+    # Define the function to handle key presses
+    def on_press(key):
+        try:
+            # Check if the space bar is pressed
+            if key == keyboard.Key.space:
+                player.pause = not player.pause
+        except AttributeError:
+            pass
+
+    # Set up the key listener
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+
+    # Keep the script running
+    listener.join()
 
 
 def main() -> None:
