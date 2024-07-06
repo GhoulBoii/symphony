@@ -5,15 +5,19 @@ from dotenv import load_dotenv
 from spotipy.oauth2 import SpotifyOAuth
 
 
-# with open("results.txt", "w") as file:
-#     file.write(json.dumps(results, indent=2))
+def get_tracks(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
+    names = []
+    links = []
+    artists = []
+    results: Any = sp.search(query, type="track", limit=5)
 
-# results = sp.current_user_saved_tracks()
-# print(results)
-# for idx, item in enumerate(results["items"]):
-#     track = item["track"]
-#     print(idx, track["artists"][0]["name"], " – ", track["name"])
+    for item in results["tracks"]["items"]:
+        names.append(item["name"])
+        links.append(item["external_urls"]["spotify"])
+        for artist in item["artists"]:
+            artists.append(artist["name"])
 
+    return {"names": names, "links": links, "artists": artists}
 
 # Retrieves Album Links
 def get_album(sp, album_name: str) -> list[Any]:
