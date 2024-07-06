@@ -19,18 +19,23 @@ def get_tracks(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
 
     return {"names": names, "links": links, "artists": artists}
 
-# Retrieves Album Links
-def get_album(sp, album_name: str) -> list[Any]:
-    album_links = []
-    results: Any = sp.search(album_name, type="album")
-    for item in results["albums"]["items"]:
-        album_links.append(item["external_urls"]["spotify"])
-    return album_links
 
 def get_artists(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
     names = []
     links = []
     results: Any = sp.search(query, type="artist")
+
+    for items in results["artists"]["items"]:
+        names.append(items["name"])
+        links.append(items["external_urls"]["spotify"])
+
+    return {"names": names, "links": links}
+
+
+def get_album(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
+    names = []
+    links = []
+    results: Any = sp.search(query, type="album")
 
     for items in results["artists"]["items"]:
         names.append(items["name"])
