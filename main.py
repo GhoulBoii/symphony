@@ -56,7 +56,7 @@ def playback(query: str) -> str | None:
     response = requests.get(url, params={"query": query}).json()
     for results in response["data"]["results"]:
         links.append(results["url"])
-        explicit_content.append(results["explicit_content"])
+        explicit_content.append(results["explicitContent"])
     song = {"links": links, "explicit_content": explicit_content}
 
     explicit_status = True
@@ -89,17 +89,18 @@ def main() -> None:
 
     print("Welcome to Symphony!")
     print("1) Home")
-    print("2) Search")
+    print("2) Search Songs")
     option = int(input("Select an option to use: "))
 
     if option == 2:
         song_query = input("Enter a song name: ")
         tracks = get_tracks(sp, query=song_query)
-        index = 1
-        for name, artists in zip(tracks["names"], tracks["artists"]):
-            print(f"{index} - {name} by {artists}")
-            index += 1
-        index_input = int(input("Enter index that you want to play: "))
+        print("SONGS:")
+        for index, (name, artist) in enumerate(zip(tracks["names"], tracks["artists"])):
+            print(f"{index+1} - {name} by {artist}")
+        print("-" * 50)
+
+        index_input = int(input("Enter song index that you want to play: "))
         index_input -= 1
         playback(
             query=f'{tracks["names"][index_input]} - {tracks["artists"][index_input]}'
