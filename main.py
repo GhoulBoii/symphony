@@ -26,7 +26,7 @@ def get_tracks(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
 def get_artists(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
     names = []
     links = []
-    results: Any = sp.search(query, type="artist")
+    results: Any = sp.search(query, type="artist", limit=5)
 
     for items in results["artists"]["items"]:
         names.append(items["name"])
@@ -35,12 +35,39 @@ def get_artists(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
     return {"names": names, "links": links}
 
 
-def get_album(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
+def get_artist_albums(sp: spotipy.Spotify, link: str) -> dict[str, list[str]]:
     names = []
     links = []
-    results: Any = sp.search(query, type="album")
+    results: Any = sp.artist_albums(artist_id=link)
+    for item in results["items"]:
+        names.append(item["name"])
+        links.append(item["external_urls"]["spotify"])
 
-    for items in results["artists"]["items"]:
+    return {"names": names, "links": links}
+
+
+def get_artist_top_tracks(sp: spotipy.Spotify, link: str) -> dict[str, list[str]]:
+    names = []
+    links = []
+    results: Any = sp.artist_top_tracks(artist_id=link)
+    for item in results["tracks"]:
+        names.append(item["name"])
+        links.append(item["external_urls"]["spotify"])
+
+    return {"names": names, "links": links}
+
+
+def get_related_artists(sp: spotipy.Spotify, link: str) -> dict[str, list[str]]:
+    names = []
+    links = []
+    results: Any = sp.artist_related_artists(artist_id=link)
+    for item in results["artists"]:
+        names.append(item["name"])
+        links.append(item["external_urls"]["spotify"])
+
+    return {"names": names, "links": links}
+
+
 def get_albums(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
     names = []
     links = []
@@ -108,6 +135,7 @@ def main() -> None:
     print("1) Home")
     print("2) Search Songs")
     print("3) Search Albums")
+    print("4) Search Artists")
     option = int(input("Select an option to use: "))
 
     if option == 2:
@@ -138,6 +166,37 @@ def main() -> None:
         print("ALBUM TRACKS:")
         for index, album_track in enumerate(album_tracks["names"]):
             print(f"{index+1} - {album_track}")
+
+    if option == 4:
+        artist_query = input("Enter an artist: ")
+        artists = get_artists(sp, query=artist_query)
+
+        print("ARTISTS:")
+        for index, name in enumerate(artists["names"]):
+            print(f"{index+1} - {name}")
+        print("-" * 50)
+
+        index_input = int(input("Enter artist index: "))
+        index_input -= 1
+
+        artist_tracks = get_artist_top_tracks(sp, artists["links"][index_input])
+        artist_albums = get_artist_albums(sp, artists["links"][index_input])
+        related_artists = get_related_artists(sp, artists["links"][index_input])
+        print("ARTIST TRACKS:")
+        for index, artist_track in enumerate(artist_tracks["names"]):
+            print(f"{index+1} - {artist_track}")
+        print("-" * 50)
+
+        print("ARTIST ALBUMS:")
+        for index, artist_albums in enumerate(artist_albums["names"]):
+            print(f"{index+1} - {artist_albums}")
+        print("-" * 50)
+
+        print("RELATED ARTISTS:")
+        for index, related_artist in enumerate(related_artists["names"]):
+            print(f"{index+1} - {related_artist}")
+        print("-" * 50)
+
 
 if __name__ == "__main__":
     main()
