@@ -91,6 +91,28 @@ def get_album_tracks(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
     return {"names": names, "links": links}
 
 
+def get_playlist_tracks(sp: spotipy.Spotify, id: str) -> dict[str, list[str]]:
+    names = []
+    links = []
+    results: Any = sp.playlist_items(id)
+    for item in results["items"]:
+        names.append(item["track"]["name"])
+        links.append(item["track"]["external_urls"]["spotify"])
+
+    return {"names": names, "links": links}
+
+
+def get_user_playlists(sp: spotipy.Spotify) -> dict[str, list[str]]:
+    names = []
+    links = []
+    results: Any = sp.current_user_playlists(limit=5)
+    for item in results["items"]:
+        names.append(item["name"])
+        links.append(item["external_urls"]["spotify"])
+
+    return {"names": names, "links": links}
+
+
 def playback(query: str) -> str | None:
     song_link = ""
     links = []
@@ -128,7 +150,7 @@ def playback(query: str) -> str | None:
 
 def main() -> None:
     load_dotenv()
-    scope = "user-library-read"
+    scope = "playlist-read-private,user-library-read"
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 
     print("Welcome to Symphony!")
