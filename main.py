@@ -6,6 +6,7 @@ import requests
 import spotipy
 from dotenv import load_dotenv
 import click
+import locale
 from spotipy.oauth2 import SpotifyOAuth
 
 
@@ -113,6 +114,7 @@ def get_user_playlists(sp: spotipy.Spotify) -> dict[str, list[str]]:
 
     return {"names": names, "links": links}
 
+
 pause_status = True
 
 
@@ -128,7 +130,7 @@ def draw_seekbar() -> None:
     sys.stdout.flush()  # Ensure the output is written immediately
 
 
-def playback(query: str) -> str | None:
+def fetch_jiosaavn(query: str) -> str:
     song_link = ""
     links = []
     explicit_content = []
@@ -147,8 +149,18 @@ def playback(query: str) -> str | None:
             break
         elif song_link == "":
             song_link = song["links"][index]
+    return song_link
 
-    player = mpv.MPV(ytdl=True)
+
+def playback(song_link: str) -> None:
+    current_locale = locale.getlocale()
+    if current_locale != ("C", None):
+        print("Resetting locale to C...")
+        locale.setlocale(locale.LC_ALL, "C")
+
+    player = mpv.MPV(ytdl=True, video=False)
+
+    print(f"Starting playback of: {song_link}")
     player.play(song_link)
 
     while True:
@@ -186,9 +198,11 @@ def main() -> None:
 
         index_input = int(input("Enter song index that you want to play: "))
         index_input -= 1
-        playback(
+
+        song_link = fetch_jiosaavn(
             query=f'{tracks["names"][index_input]} - {tracks["artists"][index_input]}'
         )
+        playback(song_link)
 
     if option == 3:
         album_query = input("Enter an album: ")
