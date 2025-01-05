@@ -1,13 +1,14 @@
+import locale
+import sys
 from typing import Any
 
-import sys
+import click
 import mpv
 import requests
 import spotipy
 from dotenv import load_dotenv
-import click
-import locale
 from spotipy.oauth2 import SpotifyOAuth
+from ytmusicapi import YTMusic
 
 
 def get_tracks(sp: spotipy.Spotify, query: str) -> dict[str, list[str]]:
@@ -140,22 +141,43 @@ def fetch_jiosaavn(query: str) -> str:
     for results in response["data"]["results"]:
         links.append(results["url"])
         explicit_content.append(results["explicitContent"])
-    song = {"links": links, "explicit_content": explicit_content}
+    songs = {"links": links, "explicit_content": explicit_content}
 
     explicit_status = True
-    for index, explicit_content in enumerate(song["explicit_content"]):
+    for index, explicit_content in enumerate(songs["explicit_content"]):
         if explicit_content == explicit_status:
-            song_link = song["links"][index]
+            song_link = songs["links"][index]
             break
         elif song_link == "":
-            song_link = song["links"][index]
+            song_link = songs["links"][index]
     return song_link
+
+
+def fetch_ytmusic(query: str) -> str | None:
+    yt = YTMusic("browser.json")
+    song_id = ""
+    video_ids = []
+    explicit_content = []
+
+    response = yt.search(query=query, filter="songs")
+    for results in response:
+        video_ids.append(results["videoId"])
+        explicit_content.append(results["isExplicit"])
+    songs = {"video_ids": video_ids, "explicit_content": explicit_content}
+
+    explicit_status = True
+    for index, explicit_content in enumerate(songs["explicit_content"]):
+        if explicit_content == explicit_status:
+            song_id = songs["video_ids"][index]
+            break
+        elif song_id == "":
+            song_id = songs["video_ids"][index]
+    return f"https://music.youtube.com/watch?v={song_id}"
 
 
 def playback(song_link: str) -> None:
     current_locale = locale.getlocale()
     if current_locale != ("C", None):
-        print("Resetting locale to C...")
         locale.setlocale(locale.LC_ALL, "C")
 
     player = mpv.MPV(ytdl=True, video=False)
