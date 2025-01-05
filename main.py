@@ -1,10 +1,11 @@
 from typing import Any
 
+import sys
 import mpv
 import requests
 import spotipy
 from dotenv import load_dotenv
-from pynput import keyboard
+import click
 from spotipy.oauth2 import SpotifyOAuth
 
 
@@ -112,6 +113,20 @@ def get_user_playlists(sp: spotipy.Spotify) -> dict[str, list[str]]:
 
     return {"names": names, "links": links}
 
+pause_status = True
+
+
+def draw_seekbar() -> None:
+    sys.stdout.write("\r")  # Move the cursor to the start of the line
+    global pause_status
+    if pause_status:
+        sys.stdout.write("||")
+        pause_status = False
+    else:
+        sys.stdout.write("|>")
+        pause_status = True
+    sys.stdout.flush()  # Ensure the output is written immediately
+
 
 def playback(query: str) -> str | None:
     song_link = ""
@@ -136,16 +151,17 @@ def playback(query: str) -> str | None:
     player = mpv.MPV(ytdl=True)
     player.play(song_link)
 
-    def on_press(key):
+    while True:
         try:
-            if key == keyboard.Key.space:
+            draw_seekbar()
+            c = click.getchar()
+            if c == " ":
                 player.pause = not player.pause
-        except AttributeError:
-            pass
-
-    listener = keyboard.Listener(on_press=on_press)
-    listener.start()
-    listener.join()
+            elif c == "q":
+                break
+        except Exception as e:
+            print(f"Playback error: {e}")
+            break
 
 
 def main() -> None:
